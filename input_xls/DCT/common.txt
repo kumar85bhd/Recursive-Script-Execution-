@@ -1,0 +1,5 @@
+Var_name,Value
+PROJECT_NAME,DCT_Project
+TOOL_VERSION,2024.1
+LICENSE_PATH,/opt/license/server
+WORK_LIB,/data/work/dct_lib

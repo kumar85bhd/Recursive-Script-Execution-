@@ -1,0 +1,3 @@
+Name,Folder_name,design_path,dsim_path
+DCT_1,dct_run_001,/data/designs/dct/dct1,/data/dsim/dct/dct1
+DCT_2,dct_run_002,/data/designs/dct/dct2,/data/dsim/dct/dct2

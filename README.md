@@ -1,11 +1,29 @@
-<div align="center">
+# RTL Workflow Automation (Claude-Driven)
 
-<img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
+Automates RTL testcase execution. One command, unattended overnight.
 
-  <h1>Built with AI Studio</h2>
+## Quick Start
 
-  <p>The fastest path from prompt to production with Gemini.</p>
+    git clone <repo>
+    cd project-root
+    chmod +x run.sh scripts/*.sh scripts/utils/*.sh
+    bash run.sh
 
-  <a href="https://aistudio.google.com/apps">Start building</a>
+## Run Options
 
-</div>
+    bash run.sh                               all, sequential (default)
+    bash run.sh --parallel                    all, parallel
+    bash run.sh --category IO                 single category
+    bash run.sh --category IO --testcase IO_1 single test case
+    bash run.sh --resume                      skip completed steps
+    bash run.sh --no-resume                   force full re-run
+
+## Integrate Your EDA Tool
+
+Edit ONLY the marked block in scripts/03_run_simulation.sh.
+
+## Check Results
+
+    cat state/summary.csv
+    ls output/
+    cat logs/master.log
