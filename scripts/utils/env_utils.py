@@ -53,3 +53,40 @@ def write_all_env_dump(out_path: str, folder_name: str,
             for k, v in vals.items():
                 f.write(f'  {k} = {v}\n')
             f.write('\n')
+
+def update_env_file(template_path, output_path, values_dict):
+    updated_vars = {}
+
+    # Normalize input keys to uppercase for robust matching
+    normalized_values = {str(k).strip().upper(): v for k, v in values_dict.items() if k is not None}
+
+    with open(template_path) as f:
+        lines = f.readlines()
+
+    updated_lines = []
+
+    for line in lines:
+        stripped = line.strip()
+
+        if stripped.startswith("export") and "=" in stripped:
+            key = stripped.split("=")[0].replace("export", "").strip()
+            upper_key = key.upper()
+
+            if upper_key in normalized_values:
+                val = normalized_values[upper_key]
+
+                # Only update if value is non-empty
+                if val is not None and str(val).strip() != "":
+                    updated_lines.append(f"export {key}={val}\n")
+                    updated_vars[key] = val
+                else:
+                    updated_lines.append(line)
+            else:
+                updated_lines.append(line)
+        else:
+            updated_lines.append(line)
+
+    with open(output_path, "w") as f:
+        f.writelines(updated_lines)
+
+    return updated_vars

@@ -57,7 +57,7 @@ run_category() {
         log_info "Mode: PARALLEL (max ${MAX_PARALLEL} jobs)"
         declare -a PIDS=()
         for tc in "${TEST_CASES[@]}"; do
-            while [[ $(jobs -r | wc -l) -ge "${MAX_PARALLEL}" ]]; do sleep 2; done
+            while [[ $(pgrep -fc "scripts/run_testcase.sh") -ge "${MAX_PARALLEL}" ]]; do sleep 2; done
             bash "${SCRIPT_DIR}/run_testcase.sh" "${category}" "${tc}" &
             PIDS+=($!)
             log_info "Launched: ${category}/${tc} PID=$!"

@@ -34,6 +34,7 @@ state_set() {
 }
 
 state_get() {
+    [[ ! -f "${STATE_FILE}" ]] && { echo ""; return; }
     local cat="$1" tc="$2" step="$3" retry="${4:-0}"
     grep "^${cat},${tc},${step},.*,.*,${retry}," "${STATE_FILE}" 2>/dev/null \
         | tail -1 | cut -d',' -f5 || echo ''

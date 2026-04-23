@@ -16,17 +16,30 @@ FOLDER_NAME = sys.argv[3]
 SCRIPT_DIR   = os.path.dirname(os.path.abspath(__file__))
 PROJECT_ROOT = os.environ.get('PROJECT_ROOT', os.path.dirname(SCRIPT_DIR))
 RUN_OUT      = os.environ['RUN_OUTPUT_DIR']
+RUN_ID       = os.environ.get('RUN_ID', 'UNKNOWN')
 
 sys.path.insert(0, os.path.join(SCRIPT_DIR, 'utils'))
-from env_utils import read_txt_as_csv, write_env_file
+from env_utils import read_txt_as_csv, update_env_file
 
 INPUT_DIR = os.path.join(PROJECT_ROOT, 'input_xls', CATEGORY)
+TEMPLATE_DIR = os.path.join(PROJECT_ROOT, 'template')
+
+def track_updates(file_name, updated):
+    if updated:
+        updates_str = ";".join([f"{k}:{v}" for k, v in updated.items()])
+        with open(f"{PROJECT_ROOT}/state/env_updates.csv", "a") as f:
+            f.write(f"{TEST_CASE},{file_name},{RUN_ID},{updates_str}\n")
+        print(f"[ENV UPDATE] {file_name}: {updates_str}")
 
 def main():
     # ── 1. env.common ─────────────────────────────────────────────
     rows = read_txt_as_csv(os.path.join(INPUT_DIR, 'common.txt'))
-    write_env_file(os.path.join(RUN_OUT, 'common', 'env.common'),
-                  {r['Var_name']: r['Value'] for r in rows})
+    values_dict = {r['Var_name']: r['Value'] for r in rows}
+    template_path = os.path.join(TEMPLATE_DIR, 'common', 'env.common')
+    output_path = os.path.join(RUN_OUT, 'common', 'env.common')
+    os.makedirs(os.path.dirname(output_path), exist_ok=True)
+    updated = update_env_file(template_path, output_path, values_dict)
+    track_updates('env.common', updated)
     print('[INFO] env.common written')
 
     # ── 2. env.simulation ─────────────────────────────────────────
@@ -34,10 +47,16 @@ def main():
     match = next((r for r in rows if r['Name'] == TEST_CASE), None)
     if not match:
         raise ValueError(f'Name={TEST_CASE!r} not found in simulation.txt')
-    write_env_file(os.path.join(RUN_OUT, 'simulation', 'env.simulation'), {
-        'DESIGN_PATH': match['design_path'],
-        'DSIM_PATH':   match['dsim_path'],
-    })
+    
+    values_dict = {
+        'DESIGN_PATH': match.get('design_path', ''),
+        'DSIM_PATH':   match.get('dsim_path', ''),
+    }
+    template_path = os.path.join(TEMPLATE_DIR, 'simulation', 'env.simulation')
+    output_path = os.path.join(RUN_OUT, 'simulation', 'env.simulation')
+    os.makedirs(os.path.dirname(output_path), exist_ok=True)
+    updated = update_env_file(template_path, output_path, values_dict)
+    track_updates('env.simulation', updated)
     print('[INFO] env.simulation written')
 
     # ── 3. env.back_ann ───────────────────────────────────────────
@@ -45,9 +64,13 @@ def main():
     match = next((r for r in rows if r['Name'] == TEST_CASE), None)
     if not match:
         raise ValueError(f'Name={TEST_CASE!r} not found in back_ann.txt')
-    # To add new parameters: extend this list and add column to back_ann.txt
-    write_env_file(os.path.join(RUN_OUT, 'back_ann', 'env.back_ann'),
-                  {k: match[k] for k in ['val1', 'val2', 'val3']})
+    
+    values_dict = {k: match.get(k, '') for k in ['val1', 'val2', 'val3']}
+    template_path = os.path.join(TEMPLATE_DIR, 'back_ann', 'env.back_ann')
+    output_path = os.path.join(RUN_OUT, 'back_ann', 'env.back_ann')
+    os.makedirs(os.path.dirname(output_path), exist_ok=True)
+    updated = update_env_file(template_path, output_path, values_dict)
+    track_updates('env.back_ann', updated)
     print('[INFO] env.back_ann written')
 
 if __name__ == '__main__':

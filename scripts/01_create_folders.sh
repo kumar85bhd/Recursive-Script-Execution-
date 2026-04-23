@@ -21,6 +21,13 @@ if [[ ! -d "${TEMPLATE}" ]]; then
     exit 1
 fi
 
+for dir in common simulation back_ann output; do
+  if [[ ! -d "${PROJECT_ROOT}/template/$dir" ]]; then
+    echo "ERROR: Missing template/$dir"
+    exit 1
+  fi
+done
+
 # Idempotent: clean remove if exists (retry safety)
 [[ -d "${DEST}" ]] && rm -rf "${DEST}"
 
