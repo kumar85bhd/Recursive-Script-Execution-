@@ -10,10 +10,10 @@
 # DO NOT MODIFY THIS FILE.
 # ================================================================
 
-STATE_FILE="${PROJECT_ROOT}/state/progress.csv"
+STATE_FILE="${STATE_FILE:-${RUN_ROOT:-${PROJECT_ROOT}}/state/progress.csv}"
 
 state_init() {
-    mkdir -p "${PROJECT_ROOT}/state"
+    mkdir -p "$(dirname "${STATE_FILE}")"
     if [[ ! -f "${STATE_FILE}" ]]; then
         echo 'Category,TestCase,Step,FolderName,Status,Retry,Timestamp,ErrorMsg,Duration' \
              > "${STATE_FILE}"

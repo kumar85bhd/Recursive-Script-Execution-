@@ -43,13 +43,15 @@ mkdir -p "${PROJECT_ROOT}/state"
 mkdir -p "${PROJECT_ROOT}/output"
 
 STATE_FILE="${PROJECT_ROOT}/state/progress.csv"
+export STATE_FILE
 if [[ ! -f "$STATE_FILE" ]]; then
   echo "Category,TestCase,Step,FolderName,Status,Retry,Timestamp,ErrorMsg,Duration" > "$STATE_FILE"
 fi
 
 ENV_UPDATE_FILE="${PROJECT_ROOT}/state/env_updates.csv"
+export ENV_UPDATE_FILE
 if [[ ! -f "$ENV_UPDATE_FILE" ]]; then
-  echo "TestCase,FileName,RunID,Updates" > "$ENV_UPDATE_FILE"
+  echo "TestCase,FileName,Updates" > "$ENV_UPDATE_FILE"
 fi
 
 # ── Print run banner ───────────────────────────────────────────

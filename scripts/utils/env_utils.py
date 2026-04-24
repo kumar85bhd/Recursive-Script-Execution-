@@ -4,10 +4,9 @@ scripts/utils/env_utils.py
 Shared utilities for reading/writing env files and CSV-style txt files.
 All functions raise exceptions on error — callers decide how to handle.
 """
-import os, csv
+import os, csv, re
 from typing import Dict
 from datetime import datetime
-
 
 def read_env_file(env_path: str) -> Dict[str, str]:
     """Read KEY=VALUE env file. Skips blank lines and # comments."""
@@ -23,7 +22,6 @@ def read_env_file(env_path: str) -> Dict[str, str]:
             result[key.strip()] = val.strip()
     return result
 
-
 def read_txt_as_csv(txt_path: str) -> list:
     """Read comma-separated .txt with header row. Returns list of dicts."""
     if not os.path.exists(txt_path):
@@ -32,14 +30,12 @@ def read_txt_as_csv(txt_path: str) -> list:
         reader = csv.DictReader(f, skipinitialspace=True)
         return [{k.strip(): v.strip() for k, v in row.items()} for row in reader]
 
-
 def write_env_file(env_path: str, kv: Dict[str, str]):
     """Write dict as KEY=VALUE lines. Creates parent dirs if needed."""
     os.makedirs(os.path.dirname(env_path), exist_ok=True)
     with open(env_path, 'w') as f:
         for key, val in kv.items():
             f.write(f'{key}={val}\n')
-
 
 def write_all_env_dump(out_path: str, folder_name: str,
                        sections: Dict[str, Dict[str, str]]):
@@ -57,8 +53,8 @@ def write_all_env_dump(out_path: str, folder_name: str,
 def update_env_file(template_path, output_path, values_dict):
     updated_vars = {}
 
-    # Normalize input keys to uppercase for robust matching
-    normalized_values = {str(k).strip().upper(): v for k, v in values_dict.items() if k is not None}
+    # Normalize input keys
+    values_dict = {k.strip().upper(): v for k, v in values_dict.items()}
 
     with open(template_path) as f:
         lines = f.readlines()
@@ -68,17 +64,20 @@ def update_env_file(template_path, output_path, values_dict):
     for line in lines:
         stripped = line.strip()
 
-        if stripped.startswith("export") and "=" in stripped:
-            key = stripped.split("=")[0].replace("export", "").strip()
-            upper_key = key.upper()
+        if stripped.startswith("setvalue"):
+            parts = stripped.split()
 
-            if upper_key in normalized_values:
-                val = normalized_values[upper_key]
+            if len(parts) >= 3:
+                key = parts[1].strip().upper()
 
-                # Only update if value is non-empty
-                if val is not None and str(val).strip() != "":
-                    updated_lines.append(f"export {key}={val}\n")
-                    updated_vars[key] = val
+                if key in values_dict:
+                    val = values_dict[key]
+
+                    if val is not None and str(val).strip() != "":
+                        updated_lines.append(f'setvalue {key} "{val}"\n')
+                        updated_vars[key] = val
+                    else:
+                        updated_lines.append(line)
                 else:
                     updated_lines.append(line)
             else:

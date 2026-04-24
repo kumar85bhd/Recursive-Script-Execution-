@@ -7,8 +7,8 @@ echo "════════════════════════�
 echo "  AGENT 3 — STATE ANALYST: Generating Summary Report"
 echo "═══════════════════════════════════════════════════════"
 
-STATE_FILE="${PROJECT_ROOT}/state/progress.csv"
-SUMMARY_FILE="${PROJECT_ROOT}/state/summary.csv"
+STATE_FILE="${STATE_FILE:-${RUN_ROOT}/state/progress.csv}"
+SUMMARY_FILE="${SUMMARY_FILE:-${RUN_ROOT}/state/summary.csv}"
 
 if [[ -f "${STATE_FILE}" ]]; then
 
@@ -46,7 +46,7 @@ if [[ -f "${STATE_FILE}" ]]; then
         
         echo ""
         echo "── FAILED TC ENV UPDATES ───────────────────────────────"
-        ENV_UPDATE_FILE="${PROJECT_ROOT}/state/env_updates.csv"
+        ENV_UPDATE_FILE="${ENV_UPDATE_FILE:-${RUN_ROOT}/state/env_updates.csv}"
         if [[ -f "${ENV_UPDATE_FILE}" ]]; then
             grep ",FAILED," "${SUMMARY_FILE}" | awk -F',' '{print $2}' | while read -r fail_tc; do
                 echo "  [${fail_tc}] env updates:"

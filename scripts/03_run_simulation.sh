@@ -20,13 +20,26 @@ source "${SCRIPT_DIR}/utils/logger.sh"
 
 BASE_PATH="${RUN_OUTPUT_DIR}"
 
-# ── Source all env files ─────────────────────────────────────────
-# This exports every KEY=VALUE as a shell variable.
-set -o allexport
-source "${BASE_PATH}/common/env.common"
-source "${BASE_PATH}/simulation/env.simulation"
-source "${BASE_PATH}/back_ann/env.back_ann"
-set +o allexport
+# ── Parse all setvalue env files ─────────────────────────────────
+parse_setvalue_file() {
+    local file="$1"
+
+    while IFS= read -r line; do
+        if [[ "$line" =~ ^setvalue[[:space:]]+([A-Za-z0-9_]+)[[:space:]]+\"(.*)\" ]]; then
+            key="${BASH_REMATCH[1]}"
+            val="${BASH_REMATCH[2]}"
+
+            export "$key=$val"
+        fi
+    done < "$file"
+}
+
+# Dynamically discover all env files
+ENV_BASE_PATH="${PROJECT_ROOT}/output/${CATEGORY}/${TEST_CASE}/${RUN_ID}"
+
+while IFS= read -r env_file; do
+    parse_setvalue_file "$env_file"
+done < <(find "$ENV_BASE_PATH" -type f -name "env.*")
 
 log_info "Env loaded: DESIGN_PATH=${DESIGN_PATH:-UNSET} DSIM_PATH=${DSIM_PATH:-UNSET}"
 

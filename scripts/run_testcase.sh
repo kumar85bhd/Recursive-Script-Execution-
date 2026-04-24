@@ -42,7 +42,7 @@ while [[ ${retry} -le ${MAX_RETRIES} ]]; do
     # ── FIX #4: RUN_ID set ONCE here, exported, never recomputed ──
     export RETRY_COUNT=${retry}
     export RUN_ID="${BASE_RUN_DATE}_${retry}"
-    export RUN_OUTPUT_DIR="${PROJECT_ROOT}/output/${CATEGORY}/${TEST_CASE}/${RUN_ID}"
+    export RUN_OUTPUT_DIR="${RUN_ROOT}/output/${CATEGORY}/${TEST_CASE}/${RUN_ID}"
 
     log_sep
     log_info "=== START ${CATEGORY}/${TEST_CASE} RETRY ${retry} RUN_ID=${RUN_ID} ==="
@@ -82,7 +82,7 @@ while [[ ${retry} -le ${MAX_RETRIES} ]]; do
         duration=$((end_ts - start_ts))
 
         if [[ ${exit_code} -ne 0 ]]; then
-            errmsg="exit=${exit_code} log=logs/${CATEGORY}/${TEST_CASE}/retry_${retry}.log"
+            errmsg="exit=${exit_code} log=${PROJECT_ROOT}/logs/${CATEGORY}/${TEST_CASE}/retry_${retry}.log"
             state_set "${CATEGORY}" "${TEST_CASE}" "${step}" \
                       "${FOLDER_NAME}" "FAILED" "${retry}" "${errmsg}" "${duration}"
             log_error "STEP FAILED: ${step} (${duration}s)"

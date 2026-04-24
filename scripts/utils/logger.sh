@@ -8,7 +8,7 @@
 #   logs/<CATEGORY>/<TESTCASE>/retry_<N>.log      when context set
 # ================================================================
 
-LOGS_ROOT="${PROJECT_ROOT}/logs"
+LOGS_ROOT="${RUN_ROOT:-${PROJECT_ROOT}}/logs"
 MASTER_LOG="${LOGS_ROOT}/master.log"
 mkdir -p "${LOGS_ROOT}"
 
