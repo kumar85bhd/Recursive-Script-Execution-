@@ -42,7 +42,9 @@ while [[ ${retry} -le ${MAX_RETRIES} ]]; do
     # ── FIX #4: RUN_ID set ONCE here, exported, never recomputed ──
     export RETRY_COUNT=${retry}
     export RUN_ID="${BASE_RUN_DATE}_${retry}"
-    export RUN_OUTPUT_DIR="${RUN_ROOT}/output/${CATEGORY}/${TEST_CASE}/${RUN_ID}"
+    export RUN_OUTPUT_DIR="${RUN_ROOT:-${PROJECT_ROOT}}/output/${CATEGORY}/${TEST_CASE}/${RUN_ID}"
+    mkdir -p "${RUN_OUTPUT_DIR}"
+    touch "${RUN_OUTPUT_DIR}/.in_progress"
 
     log_sep
     log_info "=== START ${CATEGORY}/${TEST_CASE} RETRY ${retry} RUN_ID=${RUN_ID} ==="
@@ -97,6 +99,8 @@ while [[ ${retry} -le ${MAX_RETRIES} ]]; do
     done
 
     if [[ "${all_ok}" == true ]]; then
+        rm -f "${RUN_OUTPUT_DIR}/.in_progress"
+        touch "${RUN_OUTPUT_DIR}/.completed"
         log_info "✓ SUCCESS: ${CATEGORY}/${TEST_CASE} RUN_ID=${RUN_ID}"
         break
     fi

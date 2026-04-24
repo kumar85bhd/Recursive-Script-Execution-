@@ -7,7 +7,7 @@ and writes env.common, env.simulation, env.back_ann into RUN_OUTPUT_DIR.
 Arguments: <CATEGORY> <TEST_CASE> <FOLDER_NAME>
 All paths resolved via PROJECT_ROOT and RUN_OUTPUT_DIR env vars.
 """
-import sys, os
+import sys, os, subprocess
 
 CATEGORY    = sys.argv[1]
 TEST_CASE   = sys.argv[2]
@@ -18,6 +18,7 @@ PROJECT_ROOT = os.environ.get('PROJECT_ROOT', os.path.dirname(SCRIPT_DIR))
 RUN_OUT      = os.environ['RUN_OUTPUT_DIR']
 RUN_ID       = os.environ.get('RUN_ID', 'UNKNOWN')
 ENV_UPDATE_FILE = os.path.join(PROJECT_ROOT, 'state', 'env_updates.csv')
+os.environ['ENV_UPDATE_FILE'] = ENV_UPDATE_FILE
 
 sys.path.insert(0, os.path.join(SCRIPT_DIR, 'utils'))
 from env_utils import read_txt_as_csv, update_env_file
@@ -28,8 +29,11 @@ TEMPLATE_DIR = os.path.join(PROJECT_ROOT, 'template')
 def track_updates(file_name, updated):
     if updated:
         updates_str = ";".join([f"{k}:{v}" for k, v in updated.items()])
-        with open(ENV_UPDATE_FILE, "a") as f:
-            f.write(f"{TEST_CASE},{file_name},{updates_str}\n")
+        row = f"{TEST_CASE},{file_name},{updates_str}"
+        subprocess.run([
+            "bash", "-c",
+            f"source '{PROJECT_ROOT}/scripts/utils/state_manager.sh' && state_append_env_update '{row}'"
+        ], check=True)
         print(f"[ENV UPDATE] {file_name}: {updates_str}")
 
 def main():
@@ -50,10 +54,9 @@ def main():
     if not match:
         raise ValueError(f'Name={TEST_CASE!r} not found in simulation.txt')
     
-    values_dict = {
-        'DESIGN_PATH': match.get('design_path', ''),
-        'DSIM_PATH':   match.get('dsim_path', ''),
-    }
+    reserved_keys = {'Name', 'Folder_name'}
+    values_dict = {str(k).upper(): match[k] for k in match.keys() if k not in reserved_keys}
+    
     template_path = os.path.join(TEMPLATE_DIR, 'simulation', 'env.simulation.txt')
     file_name = os.path.basename(template_path)
     output_path = os.path.join(RUN_OUT, 'simulation', 'env.simulation.txt')
@@ -68,7 +71,8 @@ def main():
     if not match:
         raise ValueError(f'Name={TEST_CASE!r} not found in back_ann.txt')
     
-    values_dict = {k: match.get(k, '') for k in ['val1', 'val2', 'val3']}
+    reserved_keys = {'Name'}
+    values_dict = {str(k).upper(): match[k] for k in match.keys() if k not in reserved_keys}
     template_path = os.path.join(TEMPLATE_DIR, 'back_ann', 'env.back_ann.txt')
     file_name = os.path.basename(template_path)
     output_path = os.path.join(RUN_OUT, 'back_ann', 'env.back_ann.txt')

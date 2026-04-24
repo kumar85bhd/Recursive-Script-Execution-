@@ -4,7 +4,7 @@ scripts/utils/env_utils.py
 Shared utilities for reading/writing env files and CSV-style txt files.
 All functions raise exceptions on error — callers decide how to handle.
 """
-import os, csv, re
+import os, csv, re, sys
 from typing import Dict
 from datetime import datetime
 
@@ -79,6 +79,7 @@ def update_env_file(template_path, output_path, values_dict):
         lines = f.readlines()
 
     updated_lines = []
+    found_keys = set()
 
     for line in lines:
         stripped = line.strip()
@@ -87,6 +88,7 @@ def update_env_file(template_path, output_path, values_dict):
         if stripped.startswith("export") and "=" in stripped:
             key = stripped.split("=")[0].replace("export", "").strip()
             upper_key = key.upper()
+            found_keys.add(upper_key)
 
             if upper_key in normalized_values:
                 val = normalized_values[upper_key]
@@ -104,6 +106,7 @@ def update_env_file(template_path, output_path, values_dict):
             if len(parts) >= 3:
                 key = parts[1]
                 upper_key = key.upper()
+                found_keys.add(upper_key)
 
                 if upper_key in normalized_values:
                     val = normalized_values[upper_key]
@@ -123,6 +126,7 @@ def update_env_file(template_path, output_path, values_dict):
             if match:
                 key = match.group(1)
                 upper_key = key.upper()
+                found_keys.add(upper_key)
 
                 if upper_key in normalized_values:
                     val = normalized_values[upper_key]
@@ -138,6 +142,11 @@ def update_env_file(template_path, output_path, values_dict):
 
         else:
             updated_lines.append(line)
+
+    template_file = os.path.basename(template_path)
+    for k in normalized_values:
+        if k not in found_keys and normalized_values[k]:
+            print(f"[WARN] Variable {k} not found in template {template_file}", file=sys.stderr if 'sys' in globals() else None)
 
     with open(output_path, "w") as f:
         f.writelines(updated_lines)

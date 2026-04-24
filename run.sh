@@ -26,6 +26,7 @@ while [[ $# -gt 0 ]]; do
         --no-parallel)  PARALLEL="no" ;;
         --resume)       RESUME="yes" ;;
         --no-resume)    RESUME="no" ;;
+        --resume-last)  RESUME_LAST="yes" ;;
         --category)     RUN_MODE="category"; TARGET_CAT="$2"; shift ;;
         --testcase)     RUN_MODE="testcase"; TARGET_TC="$2"; shift ;;
         --max-parallel) MAX_PARALLEL="$2"; shift ;;
@@ -42,7 +43,37 @@ mkdir -p "${PROJECT_ROOT}/logs"
 mkdir -p "${PROJECT_ROOT}/state"
 mkdir -p "${PROJECT_ROOT}/output"
 
+# ── Calculate RUN_COUNTER safely using flock ──────────────────
+BASE_DATE=$(date +%Y-%m-%d)
+mkdir -p "${PROJECT_ROOT}/output/${BASE_DATE}"
+COUNTER_LOCK="${PROJECT_ROOT}/output/${BASE_DATE}/counter.lock"
+
+(
+    exec 200>"${COUNTER_LOCK}"
+    flock 200
+    
+    COUNTER_FILE="${PROJECT_ROOT}/output/${BASE_DATE}/run_counter.txt"
+    if [[ ! -f "${COUNTER_FILE}" ]]; then
+        echo 0 > "${COUNTER_FILE}"
+    fi
+    RUN_COUNTER=$(cat "${COUNTER_FILE}")
+    RUN_COUNTER=$((RUN_COUNTER + 1))
+    echo "${RUN_COUNTER}" > "${COUNTER_FILE}"
+    
+    flock -u 200
+)
+RUN_COUNTER=$(cat "${PROJECT_ROOT}/output/${BASE_DATE}/run_counter.txt")
+export RUN_COUNTER
+
 STATE_FILE="${PROJECT_ROOT}/state/progress.csv"
+
+if [[ "${RESUME_LAST:-no}" == "yes" && -f "${PROJECT_ROOT}/output/last_run.ref" ]]; then
+  STATE_FILE=$(cat "${PROJECT_ROOT}/output/last_run.ref")
+else
+  mkdir -p "${PROJECT_ROOT}/output"
+  echo "$STATE_FILE" > "${PROJECT_ROOT}/output/last_run.ref"
+fi
+
 export STATE_FILE
 if [[ ! -f "$STATE_FILE" ]]; then
   echo "Category,TestCase,Step,FolderName,Status,Retry,Timestamp,ErrorMsg,Duration" > "$STATE_FILE"
@@ -51,7 +82,8 @@ fi
 ENV_UPDATE_FILE="${PROJECT_ROOT}/state/env_updates.csv"
 export ENV_UPDATE_FILE
 if [[ ! -f "$ENV_UPDATE_FILE" ]]; then
-  echo "TestCase,FileName,Updates" > "$ENV_UPDATE_FILE"
+  source "${PROJECT_ROOT}/scripts/utils/state_manager.sh"
+  state_append_env_update "TestCase,FileName,Updates"
 fi
 
 # ── Print run banner ───────────────────────────────────────────

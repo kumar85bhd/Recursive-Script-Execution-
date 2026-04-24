@@ -47,3 +47,15 @@ state_is_done() {
 state_dump_pending() {
     grep -v ',DONE,' "${STATE_FILE}" | grep -v '^Category' || echo '(none pending)'
 }
+
+state_append_env_update() {
+    local row="$1"
+    local env_update_file="${ENV_UPDATE_FILE:-${PROJECT_ROOT}/state/env_updates.csv}"
+    (
+        exec 200>"${env_update_file}.lock"
+        flock 200
+        echo "${row}" >> "${env_update_file}"
+        flock -u 200
+    )
+}
+
