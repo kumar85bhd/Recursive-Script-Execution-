@@ -29,9 +29,9 @@ def main():
     success   = True
 
     try:
-        common_vals = read_env_file(os.path.join(RUN_OUT, 'common',     'env.common'))
-        sim_vals    = read_env_file(os.path.join(RUN_OUT, 'simulation', 'env.simulation'))
-        back_vals   = read_env_file(os.path.join(RUN_OUT, 'back_ann',   'env.back_ann'))
+        common_vals = read_env_file(os.path.join(RUN_OUT, 'common',     'env.common.txt'))
+        sim_vals    = read_env_file(os.path.join(RUN_OUT, 'simulation', 'env.simulation.txt'))
+        back_vals   = read_env_file(os.path.join(RUN_OUT, 'back_ann',   'env.back_ann.txt'))
 
         out_path = os.path.join(RUN_OUT, 'output', 'all_env_values.txt')
         os.makedirs(os.path.dirname(out_path), exist_ok=True)

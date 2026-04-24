@@ -36,9 +36,9 @@ def main():
     # ── 1. env.common ─────────────────────────────────────────────
     rows = read_txt_as_csv(os.path.join(INPUT_DIR, 'common.txt'))
     values_dict = {r['Var_name']: r['Value'] for r in rows}
-    template_path = os.path.join(TEMPLATE_DIR, 'common', 'env.common')
+    template_path = os.path.join(TEMPLATE_DIR, 'common', 'env.common.txt')
     file_name = os.path.basename(template_path)
-    output_path = os.path.join(RUN_OUT, 'common', 'env.common')
+    output_path = os.path.join(RUN_OUT, 'common', 'env.common.txt')
     os.makedirs(os.path.dirname(output_path), exist_ok=True)
     updated = update_env_file(template_path, output_path, values_dict)
     track_updates(file_name, updated)
@@ -54,9 +54,9 @@ def main():
         'DESIGN_PATH': match.get('design_path', ''),
         'DSIM_PATH':   match.get('dsim_path', ''),
     }
-    template_path = os.path.join(TEMPLATE_DIR, 'simulation', 'env.simulation')
+    template_path = os.path.join(TEMPLATE_DIR, 'simulation', 'env.simulation.txt')
     file_name = os.path.basename(template_path)
-    output_path = os.path.join(RUN_OUT, 'simulation', 'env.simulation')
+    output_path = os.path.join(RUN_OUT, 'simulation', 'env.simulation.txt')
     os.makedirs(os.path.dirname(output_path), exist_ok=True)
     updated = update_env_file(template_path, output_path, values_dict)
     track_updates(file_name, updated)
@@ -69,9 +69,9 @@ def main():
         raise ValueError(f'Name={TEST_CASE!r} not found in back_ann.txt')
     
     values_dict = {k: match.get(k, '') for k in ['val1', 'val2', 'val3']}
-    template_path = os.path.join(TEMPLATE_DIR, 'back_ann', 'env.back_ann')
+    template_path = os.path.join(TEMPLATE_DIR, 'back_ann', 'env.back_ann.txt')
     file_name = os.path.basename(template_path)
-    output_path = os.path.join(RUN_OUT, 'back_ann', 'env.back_ann')
+    output_path = os.path.join(RUN_OUT, 'back_ann', 'env.back_ann.txt')
     os.makedirs(os.path.dirname(output_path), exist_ok=True)
     updated = update_env_file(template_path, output_path, values_dict)
     track_updates(file_name, updated)

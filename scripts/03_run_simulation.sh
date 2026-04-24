@@ -20,25 +20,44 @@ source "${SCRIPT_DIR}/utils/logger.sh"
 
 BASE_PATH="${RUN_OUTPUT_DIR}"
 
-# ── Parse all setvalue env files ─────────────────────────────────
-parse_setvalue_file() {
+# ── Parse all env files ─────────────────────────────────
+parse_env_file() {
     local file="$1"
 
     while IFS= read -r line; do
-        if [[ "$line" =~ ^setvalue[[:space:]]+([A-Za-z0-9_]+)[[:space:]]+\"(.*)\" ]]; then
-            key="${BASH_REMATCH[1]}"
-            val="${BASH_REMATCH[2]}"
+        line="$(echo "$line" | xargs)" # trim
+        if [[ -z "$line" || "$line" == \#* ]]; then
+            continue
+        fi
 
+        if [[ "$line" == export*=* ]]; then
+            key="$(echo "$line" | cut -d'=' -f1 | sed 's/^export *//')"
+            val="$(echo "$line" | cut -d'=' -f2-)"
+            export "$key=$val"
+        elif [[ "$line" == setenv* ]]; then
+            # setenv KEY "VAL"
+            key="$(echo "$line" | awk '{print $2}')"
+            val="$(echo "$line" | awk '{for(i=3;i<=NF;i++) printf "%s ", $i}' | sed 's/ $//' | sed 's/^"//' | sed 's/"$//')"
+            export "$key=$val"
+        elif [[ "$line" == set*=* ]]; then
+            # set KEY = "VAL"
+            key="$(echo "$line" | awk '{print $2}')"
+            val="$(echo "$line" | cut -d'=' -f2- | awk '{for(i=1;i<=NF;i++) printf "%s ", $i}' | sed 's/ $//' | sed 's/^"//' | sed 's/"$//')"
+            export "$key=$val"
+        elif [[ "$line" == *=* ]]; then
+            # KEY=VAL
+            key="$(echo "$line" | cut -d'=' -f1)"
+            val="$(echo "$line" | cut -d'=' -f2-)"
             export "$key=$val"
         fi
     done < "$file"
 }
 
 # Dynamically discover all env files
-ENV_BASE_PATH="${PROJECT_ROOT}/output/${CATEGORY}/${TEST_CASE}/${RUN_ID}"
+ENV_BASE_PATH="${RUN_OUTPUT_DIR}"
 
 while IFS= read -r env_file; do
-    parse_setvalue_file "$env_file"
+    parse_env_file "$env_file"
 done < <(find "$ENV_BASE_PATH" -type f -name "env.*")
 
 log_info "Env loaded: DESIGN_PATH=${DESIGN_PATH:-UNSET} DSIM_PATH=${DSIM_PATH:-UNSET}"
